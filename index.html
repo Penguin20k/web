@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Маркетплейс</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Хедер -->
+        <header>
+            <div class="logo">📸 Маркетплейс</div>
+            <div class="profile-icon" onclick="showProfile()">
+                <div class="avatar" id="userAvatar">👤</div>
+            </div>
+        </header>
+
+        <!-- Вкладки -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('photo')">📷 Фото</button>
+            <button class="tab" onclick="switchTab('video')">🎥 Видео</button>
+        </div>
+
+        <!-- Поиск -->
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="🔍 Поиск контента..." oninput="filterContent()">
+        </div>
+
+        <!-- Контент -->
+        <div id="contentGrid" class="content-grid"></div>
+
+        <!-- Профиль (скрытый) -->
+        <div id="profileModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeProfile()">&times;</span>
+                <h2>Профиль</h2>
+                <div class="profile-info">
+                    <div class="profile-avatar" id="profileAvatar">👤</div>
+                    <p id="profileName">Загрузка...</p>
+                    <p id="profileUsername"></p>
+                </div>
+                <h3>Мои покупки</h3>
+                <div id="purchasesList" class="purchases-list"></div>
+            </div>
+        </div>
+
+        <!-- Модальное окно просмотра -->
+        <div id="viewModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeViewModal()">&times;</span>
+                <div id="viewContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
