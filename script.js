@@ -19,7 +19,7 @@ let allContent = [];
 let userPurchases = [];
 
 // API endpoints - ЗАМЕНИ НА СВОЙ СЕРВЕР!
-const API_BASE = 'http://YOUR_SERVER_IP:8080/api';
+const API_BASE = 'http://192.168.1.10:8080/api';
 // Например: const API_BASE = 'http://123.45.67.89:8080/api';
 // Или: const API_BASE = 'https://your-domain.com/api';
 
