@@ -5,9 +5,17 @@ tg.ready();
 
 // Получение данных пользователя
 const user = tg.initDataUnsafe?.user;
-const userId = user?.id;
+let userId = user?.id;
 const userName = user?.first_name || 'Пользователь';
 const userUsername = user?.username ? `@${user.username}` : '';
+
+// Проверка userId
+if (!userId) {
+    console.error('❌ User ID not found! Using test ID for development.');
+    userId = 123456789; // Тестовый ID для разработки
+}
+
+console.log('👤 User info:', { userId, userName, userUsername });
 
 // Установка темы
 document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
@@ -18,10 +26,11 @@ let currentTab = 'photo';
 let allContent = [];
 let userPurchases = [];
 
-// API endpoints - ЗАМЕНИ НА СВОЙ СЕРВЕР!
+// 🔥 ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ RENDER URL
+// Формат: https://ваш-app-name.onrender.com
 const API_BASE = 'https://marketplace-bot-66rr.onrender.com';
-// Например: const API_BASE = 'http://123.45.67.89:8080/api';
-// Или: const API_BASE = 'https://your-domain.com/api';
+
+console.log('🌐 API Base URL:', API_BASE);
 
 // Инициализация
 async function init() {
@@ -56,25 +65,52 @@ async function loadContent() {
     contentGrid.innerHTML = '<div class="loading">Загрузка...</div>';
     
     try {
-        const response = await fetch(`${API_BASE}/content?type=${currentTab}&user_id=${userId}`);
+        const url = `${API_BASE}/api/content?type=${currentTab}&user_id=${userId}`;
+        console.log('🔄 Fetching:', url);
+        
+        const response = await fetch(url, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
         
         if (!response.ok) {
-            throw new Error('Network error');
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         allContent = await response.json();
+        console.log('✅ Content loaded:', allContent.length, 'items');
         
         if (userId) {
-            const purchasesResponse = await fetch(`${API_BASE}/purchases?user_id=${userId}`);
+            const purchasesUrl = `${API_BASE}/api/purchases?user_id=${userId}`;
+            console.log('🔄 Fetching purchases:', purchasesUrl);
+            
+            const purchasesResponse = await fetch(purchasesUrl, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
             if (purchasesResponse.ok) {
                 userPurchases = await purchasesResponse.json();
+                console.log('✅ Purchases loaded:', userPurchases.length, 'items');
             }
         }
         
         displayContent();
     } catch (error) {
-        console.error('Error loading content:', error);
-        contentGrid.innerHTML = '<div class="empty">⚠️ Ошибка загрузки.<br>Проверь подключение к серверу.</div>';
+        console.error('❌ Error loading content:', error);
+        contentGrid.innerHTML = `
+            <div class="empty">
+                ⚠️ Ошибка подключения<br>
+                <small style="color: #999; margin-top: 10px; display: block;">
+                    ${error.message}<br><br>
+                    Проверьте:<br>
+                    1. Запущен ли бот на Render<br>
+                    2. Правильно ли указан API_BASE в script.js<br>
+                    3. Доступен ли сервис (проверьте статус на Render)
+                </small>
+            </div>
+        `;
     }
 }
 
@@ -153,18 +189,29 @@ function viewContent(item) {
 // Покупка контента
 async function purchaseContent(contentId, price) {
     try {
+        const url = `${API_BASE}/api/create_invoice`;
+        console.log('🔄 Creating invoice:', url);
+        
         tg.showAlert(`Инициирую покупку контента #${contentId} за ${price} ⭐...`);
         
-        const response = await fetch(`${API_BASE}/create_invoice`, {
+        const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify({ user_id: userId, content_id: contentId })
         });
         
-        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
-        if (data.free) {
-            tg.showAlert('✅ Бесплатный контент добавлен!');
+        const data = await response.json();
+        console.log('✅ Invoice response:', data);
+        
+        if (data.free || data.test_mode) {
+            tg.showAlert('✅ Контент добавлен в покупки!');
             await loadContent();
             return;
         }
@@ -183,8 +230,8 @@ async function purchaseContent(contentId, price) {
         }
         
     } catch (error) {
-        console.error('Purchase error:', error);
-        tg.showAlert('❌ Ошибка покупки. Проверь подключение к серверу.');
+        console.error('❌ Purchase error:', error);
+        tg.showAlert('❌ Ошибка покупки: ' + error.message);
     }
 }
 
